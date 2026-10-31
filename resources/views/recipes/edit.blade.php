@@ -2,15 +2,17 @@
 @section('title', 'Sửa công thức')
 
 @section('content')
-<h2 class="mb-3">Sửa công thức</h2>
+<div class="mt-4 mb-4">
+    <span class="label-mono is-orange">Chỉnh sửa</span>
+    <h1 class="fw-bold mb-1" style="font-size:clamp(2rem,5vw,3rem)">{{ $recipe->title }}</h1>
+    @unless(auth()->user()->isAdmin())
+    <p class="text-muted mb-0">Sau khi lưu, công thức sẽ được gửi duyệt lại.</p>
+    @endunless
+</div>
 
-<form action="{{ route('recipes.update', $recipe) }}" method="POST" enctype="multipart/form-data" class="card card-body shadow-sm">
+<form action="{{ route('recipes.update', $recipe) }}" method="POST" enctype="multipart/form-data" data-loading>
     @csrf
     @method('PUT')
-    @include('recipes._form')
-    <div>
-        <button class="btn btn-success">Cập nhật</button>
-        <a href="{{ route('recipes.mine') }}" class="btn btn-outline-secondary">Hủy</a>
-    </div>
+    @include('recipes._form', ['submitLabel' => 'Lưu thay đổi', 'cancelUrl' => route('recipes.mine')])
 </form>
 @endsection

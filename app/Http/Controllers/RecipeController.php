@@ -11,23 +11,58 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class RecipeController extends Controller
-{
-    // Trang chủ: danh sách công thức đã duyệt
+{ // Trang chủ
+    // Trang chủ
     public function index(Request $request)
     {
         $query = Recipe::with(['category', 'user'])->where('status', 'approved');
 
         if ($q = $request->q) {
-            $query->where('title', 'like', "%{$q}%");
+            $like = '%' . addcslashes($q, '%_\\') . '%';
+            $query->where(function ($sub) use ($like) {
+                $sub->where('title', 'like', $like)
+                    ->orWhereHas('ingredients', fn($i) => $i->where('name', 'like', $like));
+            });
         }
         if ($request->category) {
             $query->where('category_id', $request->category);
         }
 
         $recipes = $query->latest()->paginate(9)->withQueryString();
-        $categories = Category::withCount('recipes')->get();
 
-        return view('recipes.index', compact('recipes', 'categories'));
+        // Danh mục kèm số công thức đã duyệt
+        $categories = Category::withCount([
+            'recipes' => fn($sub) => $sub->where('status', 'approved'),
+        ])->orderBy('name')->get();
+
+        // Món nổi bật và "Được yêu thích": chỉ hiện khi chưa tìm kiếm/lọc và đang ở trang 1
+        $showIntro = !$request->q && !$request->category && $recipes->currentPage() === 1;
+
+        $featured = null;
+        $popular = collect();
+
+        if ($showIntro) {
+            // Ưu tiên món Admin chọn nổi bật (mới chọn gần nhất); chưa có thì lấy món mới nhất
+            $featured = Recipe::with(['category', 'user'])
+                ->where('status', 'approved')
+                ->where('is_featured', true)
+                ->orderByDesc('updated_at')
+                ->first()
+                ?? Recipe::with(['category', 'user'])
+                ->where('status', 'approved')
+                ->latest()
+                ->first();
+
+            $popular = Recipe::with('category')
+                ->where('status', 'approved')
+                ->withCount('favoritedBy')
+                ->orderByDesc('favorited_by_count')
+                ->latest()
+                ->take(3)
+                ->get();
+        }
+
+        return view('recipes.index', compact('recipes', 'categories', 'featured', 'popular'));
     }
 
     // Chi tiết một công thức
@@ -45,22 +80,87 @@ class RecipeController extends Controller
         $comments = $recipe->comments()->with('user')->latest()->get();
 
         $isFavorited = auth()->check()
-            && $recipe->favoritedBy()->where('favorites.user_id', auth()->id())->exists();
-
+            && $recipe->favoritedBy()->where('users.id', auth()->id())->exists();
         $favCount = $recipe->favoritedBy()->count();
 
-        return view('recipes.show', compact('recipe', 'comments', 'isFavorited', 'favCount'));
-    }
-
-    // Công thức của tôi
-    public function mine()
-    {
-        $recipes = Recipe::with('category')
-            ->where('user_id', auth()->id())
+        // Gợi ý: cùng danh mục
+        $related = Recipe::with(['category', 'user'])
+            ->where('status', 'approved')
+            ->where('category_id', $recipe->category_id)
+            ->where('id', '!=', $recipe->id)
             ->latest()
-            ->paginate(10);
+            ->take(3)
+            ->get();
 
-        return view('recipes.mine', compact('recipes'));
+        return view('recipes.show', compact('recipe', 'comments', 'isFavorited', 'favCount', 'related'));
+    }
+    // Gợi ý tìm kiếm tức thì (trả về JSON cho AJAX)
+    public function suggest(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $like = '%' . addcslashes($q, '%_\\') . '%';
+
+        $recipes = Recipe::with('category')
+            ->where('status', 'approved')
+            ->where(function ($sub) use ($like) {
+                $sub->where('title', 'like', $like)
+                    ->orWhereHas('ingredients', fn($i) => $i->where('name', 'like', $like));
+            })
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return response()->json([
+            'data' => $recipes->map(fn($r) => [
+                'title'     => $r->title,
+                'category'  => $r->category->name,
+                'cook_time' => $r->cook_time,
+                'image'     => $r->image_url,
+                'url'       => route('recipes.show', $r),
+            ]),
+        ]);
+    }
+    // Gợi ý một món ngẫu nhiên
+    public function random()
+    {
+        $recipe = Recipe::where('status', 'approved')->inRandomOrder()->first();
+
+        if (!$recipe) {
+            return redirect()->route('home')->with('success', 'Chưa có công thức nào để gợi ý.');
+        }
+
+        return redirect()->route('recipes.show', $recipe);
+    }
+    // Công thức của tôi (lọc theo trạng thái)
+    public function mine(Request $request)
+    {
+        // Đếm theo trạng thái bằng một câu truy vấn
+        $byStatus = Recipe::where('user_id', auth()->id())
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $counts = [
+            'all'      => $byStatus->sum(),
+            'pending'  => $byStatus['pending'] ?? 0,
+            'approved' => $byStatus['approved'] ?? 0,
+            'rejected' => $byStatus['rejected'] ?? 0,
+        ];
+
+        $query = Recipe::with('category')->where('user_id', auth()->id());
+
+        if (in_array($request->status, ['pending', 'approved', 'rejected'])) {
+            $query->where('status', $request->status);
+        }
+
+        $recipes = $query->latest()->paginate(8)->withQueryString();
+
+        return view('recipes.mine', compact('recipes', 'counts'));
     }
 
     // Form thêm mới
@@ -131,14 +231,16 @@ class RecipeController extends Controller
             }
 
             $recipe->update([
-                'category_id' => $data['category_id'],
-                'title'       => $data['title'],
-                'description' => $data['description'] ?? null,
-                'image_path'  => $imagePath,
-                'cook_time'   => $data['cook_time'],
-                'servings'    => $data['servings'],
-                'difficulty'  => $data['difficulty'],
-                'status'      => auth()->user()->isAdmin() ? $recipe->status : 'pending',
+                'category_id'      => $data['category_id'],
+                'title'            => $data['title'],
+                'description'      => $data['description'] ?? null,
+                'image_path'       => $imagePath,
+                'cook_time'        => $data['cook_time'],
+                'servings'         => $data['servings'],
+                'difficulty'       => $data['difficulty'],
+                // User sửa thì phải duyệt lại, Admin sửa thì giữ nguyên trạng thái
+                'status'           => auth()->user()->isAdmin() ? $recipe->status : 'pending',
+                'rejection_reason' => auth()->user()->isAdmin() ? $recipe->rejection_reason : null,
             ]);
 
             // Xóa nguyên liệu và bước cũ, lưu lại bản mới
@@ -149,13 +251,16 @@ class RecipeController extends Controller
 
         return redirect()->route('recipes.mine')->with('success', 'Cập nhật công thức thành công.');
     }
-
     // Xóa (xóa mềm)
     public function destroy(Recipe $recipe)
     {
         Gate::authorize('delete', $recipe);
 
         $recipe->delete();
+
+        if (auth()->user()->isAdmin() && $recipe->user_id !== auth()->id()) {
+            return redirect()->route('admin.recipes.index')->with('success', 'Đã chuyển công thức vào thùng rác.');
+        }
 
         return redirect()->route('recipes.mine')->with('success', 'Đã xóa công thức.');
     }

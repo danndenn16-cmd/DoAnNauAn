@@ -20,6 +20,12 @@ class Recipe extends Model
         'servings',
         'difficulty',
         'status',
+        'is_featured',
+        'rejection_reason',
+    ];
+
+    protected $casts = [
+        'is_featured' => 'boolean',
     ];
 
     public function user()
@@ -53,6 +59,12 @@ class Recipe extends Model
     {
         return $this->image_path
             ? asset('storage/' . $this->image_path)
-            : 'https://placehold.co/600x400?text=Recipe';
+            : 'https://placehold.co/800x600/FFE8D6/FF6B1A?text=Cook+cung+1045';
+    }
+
+    // Dùng trong view: $recipe->difficulty_label
+    public function getDifficultyLabelAttribute()
+    {
+        return ['easy' => 'Dễ', 'medium' => 'Trung bình', 'hard' => 'Khó'][$this->difficulty] ?? $this->difficulty;
     }
 }
