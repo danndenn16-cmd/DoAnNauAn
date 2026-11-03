@@ -155,7 +155,7 @@
                     <div>{{ $c->content }}</div>
 
                     @auth
-                        @if(auth()->id() === $c->user_id || auth()->user()->isAdmin())
+                        @if(auth()->id() === $c->user_id || auth()->user()->isStaff())
                             <form action="{{ route('comments.destroy', $c) }}" method="POST"
                                   onsubmit="return confirm('Xóa bình luận này?')">
                                 @csrf

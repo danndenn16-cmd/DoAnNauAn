@@ -45,8 +45,7 @@
         <div class="small text-muted">⏱ {{ $r->cook_time }} phút · Đăng ngày {{ $r->created_at->format('d/m/Y') }}</div>
 
         @if($r->status === 'rejected' && $r->rejection_reason)
-        <div class="reject-note">Lý do: {{ $r->rejection_reason }}</div>
-        @endif
+<div class="reject-note">Lý do: {{ $r->rejection_reason }} · <a href="{{ route('messages.index') }}">Nhắn quản trị viên</a></div>        @endif
     </div>
 
     <div class="my-recipe__actions">

@@ -1,4 +1,4 @@
-@extends('layouts.site')
+@extends('layouts.admin')
 @section('title', 'Thùng rác')
 
 @section('content')

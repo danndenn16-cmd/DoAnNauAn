@@ -43,9 +43,46 @@ class User extends Authenticatable
         return $this->belongsToMany(Recipe::class, 'favorites', 'user_id', 'recipe_id')->withTimestamps();
     }
 
+    // Các tin nhắn thuộc cuộc trò chuyện của thành viên này
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'user_id');
+    }
+
+    // Số tin chưa đọc: admin đếm tin do thành viên gửi, thành viên đếm tin do admin gửi
+    public function unreadMessagesCount(): int
+    {
+        return $this->isAdmin()
+            ? Message::whereColumn('sender_id', 'user_id')->whereNull('read_at')->count()
+            : Message::where('user_id', $this->id)->where('sender_id', '!=', $this->id)->whereNull('read_at')->count();
+    }
+
     // Kiểm tra có phải admin không
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    // Các vai trò trong hệ thống
+    public const ROLES = [
+        'user'      => 'Thành viên',
+        'moderator' => 'Biên tập viên',
+        'admin'     => 'Quản trị viên',
+    ];
+
+    public function isModerator(): bool
+    {
+        return $this->role === 'moderator';
+    }
+
+    // Nhân sự quản trị: Admin hoặc Biên tập viên
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['admin', 'moderator'], true);
+    }
+
+    public function roleLabel(): string
+    {
+        return self::ROLES[$this->role] ?? $this->role;
     }
 }

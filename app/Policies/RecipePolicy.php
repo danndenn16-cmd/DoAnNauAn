@@ -37,12 +37,12 @@ class RecipePolicy
      */
     public function update(User $user, Recipe $recipe): bool
     {
-        return $user->isAdmin() || $user->id === $recipe->user_id;
+        return $user->isStaff() || $user->id === $recipe->user_id;
     }
 
     public function delete(User $user, Recipe $recipe): bool
     {
-        return $user->isAdmin() || $user->id === $recipe->user_id;
+        return $user->isStaff() || $user->id === $recipe->user_id;
     }
 
     /**

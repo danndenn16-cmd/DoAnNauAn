@@ -85,8 +85,8 @@ class ChatController extends Controller
         foreach ($models as $model) {
             try {
                 $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
-                    ->timeout(25)
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", $payload);
+                    ->connectTimeout(10)
+                    ->timeout(40)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", $payload);
             } catch (\Throwable $e) {
                 Log::warning("Gemini connection error ({$model}): " . $e->getMessage());
                 $response = null;

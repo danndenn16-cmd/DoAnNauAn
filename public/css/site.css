@@ -1747,4 +1747,329 @@ main.container {
     margin-right: .45rem;
 }
 
-.brand-pill { white-space: nowrap; }
+.brand-pill {
+    white-space: nowrap;
+}
+
+/* ================= Chat với admin ================= */
+.dm-box {
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.dm-head {
+    padding: .9rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.dm-list {
+    height: min(60vh, 520px);
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+    background: #FFFCF9;
+}
+
+.dm {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+}
+
+.dm--mine {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.dm--other {
+    align-self: flex-start;
+}
+
+.dm__bubble {
+    padding: .6rem .9rem;
+    border-radius: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: .93rem;
+    line-height: 1.5;
+}
+
+.dm--mine .dm__bubble {
+    background: var(--orange);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.dm--other .dm__bubble {
+    background: var(--orange-soft);
+    border-bottom-left-radius: 4px;
+}
+
+.dm__meta {
+    font-size: .72rem;
+    color: var(--muted);
+    margin-top: .2rem;
+    font-family: var(--font-mono);
+}
+
+.dm-empty {
+    margin: auto;
+    color: var(--muted);
+    text-align: center;
+    font-size: .92rem;
+}
+
+.dm-form {
+    display: flex;
+    gap: .5rem;
+    padding: .8rem 1rem;
+    border-top: 1px solid var(--line);
+}
+
+.msg-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--orange);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.msg-badge[hidden] {
+    display: none;
+}
+
+.conv {
+    display: flex;
+    gap: .7rem;
+    align-items: center;
+    padding: .8rem 1rem;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+}
+
+.conv:hover,
+.conv.is-active {
+    background: var(--orange-soft);
+    color: var(--ink);
+}
+
+.conv__name {
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.conv__last {
+    font-size: .82rem;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ================= Layout quản trị (khác hẳn giao diện người dùng) ================= */
+.adm-body {
+    background: #F6F2EE;
+}
+
+.adm {
+    display: flex;
+    min-height: 100vh;
+}
+
+.adm-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.adm-top {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    padding: .7rem 1.5rem;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.adm-toggle {
+    border: 1.5px solid var(--ink);
+    background: #fff;
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.adm-content {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+@media (min-width: 992px) {
+    .adm-content {
+        padding: 1.75rem 2.25rem;
+    }
+}
+
+.adm-side {
+    --bs-offcanvas-bg: var(--ink);
+    --bs-offcanvas-color: #fff;
+    --bs-offcanvas-width: 270px;
+}
+
+@media (min-width: 992px) {
+    .adm-sidewrap {
+        width: 260px;
+        flex: none;
+        background: var(--ink);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+.adm-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    text-decoration: none;
+    padding: .2rem 0 1rem;
+}
+
+.adm-brand i {
+    width: .6rem;
+    height: .6rem;
+    border-radius: 50%;
+    background: var(--orange);
+    display: inline-block;
+}
+
+.adm-brand:hover {
+    color: #fff;
+}
+
+.adm-user {
+    background: rgba(255, 255, 255, .07);
+    border-radius: 14px;
+    padding: .8rem;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    margin-bottom: 1.2rem;
+}
+
+.adm-user strong {
+    display: block;
+    font-size: .92rem;
+    line-height: 1.2;
+}
+
+.adm-user small {
+    display: block;
+    color: rgba(255, 255, 255, .6);
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-top: .15rem;
+}
+
+.adm-nav {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.adm-section {
+    margin: 1.1rem 0 .4rem;
+    padding: 0 .8rem;
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .4);
+}
+
+.adm-link {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .6rem .8rem;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, .75);
+    text-decoration: none;
+    font-size: .93rem;
+    background: none;
+    border: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.adm-link:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+.adm-link.is-active {
+    background: var(--orange);
+    color: #fff;
+    font-weight: 600;
+}
+
+.adm-link .count,
+.adm-link .msg-badge {
+    margin-left: auto;
+}
+
+.adm-link.is-active .count {
+    background: #fff;
+    color: var(--orange-dark);
+}
+
+/* Bảng quyền hạn ở trang quản lý thành viên */
+.role-card {
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+    padding: 1rem 1.1rem;
+    height: 100%;
+}
+
+.role-card h3 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin-bottom: .4rem;
+}
+
+.role-card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: .88rem;
+    color: var(--muted);
+}

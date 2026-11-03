@@ -11,23 +11,31 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'name'     => 'Admin',
+            'email'    => 'admin@example.com',
             'password' => Hash::make('admin123'),
-            'role' => 'admin',
+            'role'     => 'admin',
         ]);
 
         User::create([
-            'name' => 'Nguyễn Văn A',
-            'email' => 'user@example.com',
+            'name'     => 'Nguyễn Văn A',
+            'email'    => 'user@example.com',
             'password' => Hash::make('user123'),
-            'role' => 'user',
+            'role'     => 'user',
         ]);
 
+        User::create([
+            'name'     => 'Biên tập viên',
+            'email'    => 'moderator@example.com',
+            'password' => Hash::make('mod123'),
+            'role'     => 'moderator',
+        ]);
         $this->call([
             CategorySeeder::class,
             RecipeSeeder::class,
             ExtraRecipeSeeder::class,
+            MoreRecipeSeeder::class,
+            MessageSeeder::class
         ]);
     }
 }

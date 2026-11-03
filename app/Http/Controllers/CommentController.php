@@ -29,7 +29,7 @@ class CommentController extends Controller
     {
         // Chỉ chủ bình luận hoặc admin được xóa
         abort_unless(
-            auth()->id() === $comment->user_id || auth()->user()->isAdmin(),
+            auth()->id() === $comment->user_id || auth()->user()->isStaff(),
             403
         );
 

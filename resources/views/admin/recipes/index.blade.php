@@ -1,4 +1,4 @@
-@extends('layouts.site')
+@extends('layouts.admin')
 @section('title', 'Quản lý công thức')
 
 @section('content')
@@ -58,7 +58,7 @@
                         @csrf
                         @method('PATCH')
                         <button class="btn btn-sm {{ $r->is_featured ? 'btn-orange' : 'btn-ink-outline' }}"
-                            title="Chọn/bỏ nổi bật" @disabled($r->status !== 'approved')>
+                            title="Chọn/bỏ nổi bật" @disabled($r->status !== 'approved' || !auth()->user()->isAdmin())>
                             {{ $r->is_featured ? '★' : '☆' }}
                         </button>
                     </form>

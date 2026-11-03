@@ -70,7 +70,7 @@ class RecipeController extends Controller
     {
         // Công thức chưa duyệt: chỉ chủ bài và admin được xem
         $canSee = auth()->check()
-            && (auth()->user()->isAdmin() || auth()->id() === $recipe->user_id);
+            && (auth()->user()->isStaff() || auth()->id() === $recipe->user_id);
 
         if ($recipe->status !== 'approved' && !$canSee) {
             abort(404);
@@ -258,7 +258,7 @@ class RecipeController extends Controller
 
         $recipe->delete();
 
-        if (auth()->user()->isAdmin() && $recipe->user_id !== auth()->id()) {
+        if (auth()->user()->isStaff() && $recipe->user_id !== auth()->id()) {
             return redirect()->route('admin.recipes.index')->with('success', 'Đã chuyển công thức vào thùng rác.');
         }
 

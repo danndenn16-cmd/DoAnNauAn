@@ -59,31 +59,40 @@
 
             <ul class="navbar-nav align-items-lg-center gap-lg-2">
                 @auth
-                    <li class="nav-item">
-                        <a class="btn btn-orange btn-sm" href="{{ route('recipes.create') }}">+ Đăng công thức</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="avatar">{{ mb_substr(auth()->user()->name, 0, 1) }}</span>
-                            {{ auth()->user()->name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ route('recipes.mine') }}">Công thức của tôi</a></li>
-                            <li><a class="dropdown-item" href="{{ route('favorites.index') }}">♥ Yêu thích</a></li>
-                            @if(auth()->user()->isAdmin())
-                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Quản trị</a></li>
-                            @endif
-                            <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Hồ sơ cá nhân</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button class="dropdown-item">Đăng xuất</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                @else
+    @php $unreadCount = auth()->user()->unreadMessagesCount(); @endphp
+    <li class="nav-item">
+        <a class="btn btn-orange btn-sm" href="{{ route('recipes.create') }}">+ Đăng công thức</a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar">{{ mb_substr(auth()->user()->name, 0, 1) }}</span>
+            {{ auth()->user()->name }}
+            <span class="msg-badge" data-msg-badge @if($unreadCount < 1) hidden @endif>{{ $unreadCount }}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ route('recipes.mine') }}">Công thức của tôi</a></li>
+            <li><a class="dropdown-item" href="{{ route('favorites.index') }}">♥ Yêu thích</a></li>
+            <li>
+                <a class="dropdown-item d-flex justify-content-between align-items-center"
+                   href="{{ auth()->user()->isAdmin() ? route('admin.messages.index') : route('messages.index') }}">
+                    {{ auth()->user()->isAdmin() ? 'Tin nhắn thành viên' : 'Nhắn tin với admin' }}
+                    <span class="msg-badge" data-msg-badge @if($unreadCount < 1) hidden @endif>{{ $unreadCount }}</span>
+                </a>
+            </li>
+            @if(auth()->user()->isStaff())
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Quản trị</a></li>
+            @endif
+            <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Hồ sơ cá nhân</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="dropdown-item">Đăng xuất</button>
+                </form>
+            </li>
+        </ul>
+    </li>
+@else
                     <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Đăng nhập</a></li>
                     <li class="nav-item"><a class="btn btn-orange btn-sm" href="{{ route('register') }}">Đăng ký</a></li>
                 @endauth
@@ -308,6 +317,30 @@
 })();
 </script>
 
+
+@auth
+<script>
+(function () {
+    const badges = document.querySelectorAll('[data-msg-badge]');
+    const onChat = location.pathname.indexOf('/messages') !== -1;   // đang ở trang chat thì không cần toast
+    let last = {{ (int) ($unreadCount ?? 0) }};
+
+    function refresh() {
+        if (document.hidden) return;
+        fetch('{{ route('messages.unread') }}', { headers: { 'Accept': 'application/json' } })
+            .then(r => r.ok ? r.json() : null)
+            .then(function (d) {
+                if (!d) return;
+                badges.forEach(function (b) { b.textContent = d.count; b.hidden = d.count < 1; });
+                if (d.count > last && !onChat) showToast('Bạn có tin nhắn mới.', 'info');
+                last = d.count;
+            })
+            .catch(function () {});
+    }
+    setInterval(refresh, 20000);
+})();
+</script>
+@endauth
 {{-- Trợ lý đầu bếp (ẩn ở khu Admin) --}}
 @unless(request()->routeIs('admin.*'))
     @include('partials.chat-widget')

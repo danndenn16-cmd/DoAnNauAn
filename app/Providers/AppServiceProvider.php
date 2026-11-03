@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Số công thức chờ duyệt hiện trên menu Admin
-        View::composer('admin._menu', function ($view) {
+        View::composer(['admin._menu', 'layouts.admin'], function ($view) {
             $view->with('pendingCount', Recipe::where('status', 'pending')->count());
         });
     }
